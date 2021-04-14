@@ -1,15 +1,29 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
-)
+	"text/template"
 
-func handlerFunc( w http.ResponseWriter, r * http.Request){
-	 fmt.Fprint(w, "<h1>Hello</h1>")
+	"github.com/gorilla/mux"
+)
+ 
+var templ * template.Template
+
+ 
+func home(w http.ResponseWriter, req *http.Request){
+      w.Header().Set("Content-Type", "text/html")
+      if err := templ.Execute(w, nil); err != nil{
+         panic(err)
+      }
 }
 func main() {
-	fmt.Println("Hello")
-	http.HandleFunc("/", handlerFunc)
-	http.ListenAndServe(":8000", nil)
+   var err error
+   templ, err = template.ParseFiles("views/home.gohtml")
+   if err != nil{
+     panic(err)
+   }
+ r := mux.NewRouter()
+ r.HandleFunc("/", home)
+ 
+ http.ListenAndServe(":3000", r)
 }
