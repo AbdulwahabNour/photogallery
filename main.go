@@ -10,6 +10,8 @@ import (
 var (
   homeTempl * views.View
   contactTempl * views.View
+  faq   *  views.View
+  signupTemp * views.View 
 )
  
 func home(w http.ResponseWriter, req *http.Request){
@@ -28,14 +30,33 @@ func contact (w http.ResponseWriter, r *http.Request){
   }
   
 }
+func faqPage( w http.ResponseWriter, r *http.Request){
+   w.Header().Set("Content-Type", "text/html")
+   if err := faq.Template.ExecuteTemplate(w, faq.Body, nil); err != nil{
+      panic(err)
+   }
+}
+
+func signup(w http.ResponseWriter, req * http.Request){
+      w.Header().Set("Content-Type", "text/html")
+      if err := signupTemp.Template.ExecuteTemplate(w, faq.Body, nil); err != nil{
+        panic( err)
+      }
+
+}
  
 func main() {
-  homeTempl = views.NewView("views/layouts/home.gohtml")
-  contactTempl = views.NewView("views/layouts/contact.gohtml")
+  homeTempl = views.NewView("views/home.gohtml")
+  contactTempl = views.NewView("views/contact.gohtml")
+  faq = views.NewView("views/faq.gohtml")
+  signupTemp = views.NewView("views/signup.gohtml")
+
   
  r := mux.NewRouter()
  r.HandleFunc("/", home)
+ r.HandleFunc("/faq", faqPage)
  r.HandleFunc("/contact", contact)
+ r.HandleFunc("/signup", signup)
  ///views/layouts/js/jquery-3.1.1.min.js
  
  http.ListenAndServe(":3000", r)
