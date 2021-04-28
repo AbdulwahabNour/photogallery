@@ -2,6 +2,7 @@ package views
 
 import (
 	"html/template"
+	"net/http"
 	"path/filepath"
 )
 
@@ -18,13 +19,19 @@ func NewView( templ ...string) *View {
      if err != nil {
          panic(err)
      }
-
+  
+     
      return &View{Template: t, Body: "body"}
 }
-
+//Qazwsxedc11@111z
+//Qazwsxedc11@111z2
 type View struct{
      Template *template.Template
      Body string
+}
+func (v *View) Render(w http.ResponseWriter, data interface{}) error{
+        err := v.Template.ExecuteTemplate(w, v.Body, data)
+        return err
 }
 
 func layoutFiles() []string{

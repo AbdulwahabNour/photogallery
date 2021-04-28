@@ -4,11 +4,12 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"lenslocked.com/controllers"
 	"lenslocked.com/views"
 )
  
 var (
-  homeTempl * views.View
+  homeTempl * views.View //0xc00012a3e0
   contactTempl * views.View
   faq   *  views.View
   signupTemp * views.View 
@@ -36,27 +37,20 @@ func faqPage( w http.ResponseWriter, r *http.Request){
       panic(err)
    }
 }
-
-func signup(w http.ResponseWriter, req * http.Request){
-      w.Header().Set("Content-Type", "text/html")
-      if err := signupTemp.Template.ExecuteTemplate(w, faq.Body, nil); err != nil{
-        panic( err)
-      }
-
-}
+ 
  
 func main() {
-  homeTempl = views.NewView("views/home.gohtml")
+  homeTempl = views.NewView("views/home.gohtml")//0xc00012a3e0
   contactTempl = views.NewView("views/contact.gohtml")
   faq = views.NewView("views/faq.gohtml")
-  signupTemp = views.NewView("views/signup.gohtml")
+  newUserControllers  := controllers.NewUser()
 
   
  r := mux.NewRouter()
  r.HandleFunc("/", home)
  r.HandleFunc("/faq", faqPage)
  r.HandleFunc("/contact", contact)
- r.HandleFunc("/signup", signup)
+ r.HandleFunc("/signup", newUserControllers.New)
  ///views/layouts/js/jquery-3.1.1.min.js
  
  http.ListenAndServe(":3000", r)
