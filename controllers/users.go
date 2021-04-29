@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gorilla/schema"
 	"lenslocked.com/views"
 )
 
@@ -36,16 +35,10 @@ func(u *User)New(w http.ResponseWriter, r * http.Request){
 //Create  is used to process th signup form when submit the form
 //POST /signup
 func(u *User)Create(w http.ResponseWriter, req *http.Request){
-     if err := req.ParseForm(); err != nil{
-                 panic(err)
+     var dataForm SignupForm
+     
+     if err := parseForm(req, &dataForm); err != nil{
+          panic(err)
      }
-        var dataForm SignupForm
-
-        var decoder = schema.NewDecoder()
-        err := decoder.Decode(&dataForm, req.PostForm)
-        if err != nil{
-             panic(err)
-        }
-        
        fmt.Fprintln(w, dataForm)
 }
