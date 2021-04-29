@@ -10,7 +10,7 @@ import (
 //function to parse signup page new page
 
 func NewUser() *User{
-    return &User{ NewView: views.NewView("views/users/new.gohtml")}
+    return &User{ NewView: views.NewView("users/new")}
 }
 
 type User struct{
