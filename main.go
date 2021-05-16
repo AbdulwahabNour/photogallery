@@ -19,7 +19,6 @@ func main() {
  r.Handle("/faq", newStatic.Faq).Methods("GET")
  r.HandleFunc("/signup", newUserControllers.New).Methods("GET")
  r.HandleFunc("/signup", newUserControllers.Create).Methods("POST")
- ///views/layouts/js/jquery-3.1.1.min.js
  
  http.ListenAndServe(":3000", r)
  
