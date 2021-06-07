@@ -34,7 +34,11 @@ func main() {
  r.Handle("/",newStatic.HomeView).Methods("GET")
  r.Handle("/contact", newStatic.ContactView).Methods("GET")
  r.Handle("/faq", newStatic.Faq).Methods("GET")
- r.HandleFunc("/signup", newUserControllers.New).Methods("GET")
+ r.Handle("/signup", newUserControllers.NewView).Methods("GET")
+ r.Handle("/login", newUserControllers.LoginView).Methods("GET")
+ 
+ r.HandleFunc("/login", newUserControllers.Login).Methods("POST")
+
  r.HandleFunc("/signup", newUserControllers.Create).Methods("POST")
  
  http.ListenAndServe(":3000", r)

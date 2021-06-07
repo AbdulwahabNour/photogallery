@@ -10,13 +10,15 @@ import (
 func parseForm(req * http.Request, dst interface{}) error {
 
         if err := req.ParseForm(); err != nil{
-                 return err
+                panic(err)  
         }
         var decoder = schema.NewDecoder()
         
         err := decoder.Decode(dst, req.PostForm)
         if err != nil{
-                 return err
+                panic(err)  
         }
         return nil 
 }
+
+ 
