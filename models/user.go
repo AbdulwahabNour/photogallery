@@ -15,6 +15,8 @@ var (
     ErrNotFound = errors.New("Models: resource not found")
     // ErrInvalid is returned when an invalid id  is provided
     ErrInvalidID = errors.New("Models: ID  provided was invalid")
+    // ErrInvalidPassword is if hash don't matched 
+    ErrInvalidPassword = errors.New("Models: Incorrect password")
 )
 
 const userPassPepper= "photogallery-App"
@@ -68,8 +70,7 @@ func (u *UserService)ByEmail(email string) (*User, error){
 }
 //Create New user 
 func (u *UserService)Create(user *User) error{
-    passBytes := []byte(user.Password + userPassPepper)
-    hashbyte, err := bcrypt.GenerateFromPassword(passBytes, bcrypt.DefaultCost)
+    hashbyte, err := generatePassword([]byte(user.Password + userPassPepper))
     if err != nil{
         return err
     }
@@ -112,6 +113,25 @@ func (u *UserService) Close() error{
     
 }
 
+func (u *UserService)Authenticate(email string, password string)(*User, error){
+      foundUser, err := u.ByEmail(email)
+      if err != nil{
+          return nil, err
+      }
+      err = bcrypt.CompareHashAndPassword([]byte(foundUser.PasswordHash), []byte(password + userPassPepper))
+       if err != nil{
+            switch err{
+                case bcrypt.ErrMismatchedHashAndPassword:
+                    return nil, ErrInvalidPassword
+
+                default:
+                    return nil, err
+            }
+       }
+    
+      return foundUser, nil
+}
+
 type User struct{
     gorm.Model
     Email    string `gorm:"unique;unique_index;not null"`
@@ -126,4 +146,11 @@ func first(db *gorm.DB, data  interface{}) error{
         return  ErrNotFound
     }
     return  err
+}
+func generatePassword(password []byte)([]byte,error){
+    hashbyte, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
+    if err != nil{
+       return nil, err
+    }
+    return hashbyte, nil
 }

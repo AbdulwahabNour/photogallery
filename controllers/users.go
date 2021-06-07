@@ -59,6 +59,17 @@ func(u *User)Create(w http.ResponseWriter, req *http.Request){
 func (u *User)Login(w http.ResponseWriter, req *http.Request){
         form := LoginForm{}
         parseForm(req, &form)
-        fmt.Fprintln(w, form)
+        user, err:= u.userServ.Authenticate(form.Email, form.Password)
+        switch err{
+        case models.ErrNotFound:
+           fmt.Fprintln(w, "Invalid email address")
+        case models.ErrInvalidPassword:
+          fmt.Fprintln(w, "Password not correct")
+        case nil:
+          fmt.Fprintln(w, user)
+        default:
+          http.Error(w, err.Error(), http.StatusInternalServerError)
+        }
+       
         
 }
