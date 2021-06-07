@@ -3,11 +3,13 @@ package models
 import (
 	"errors"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
-
+ 
+ 
 var ( 
     //ErrNotFound is returned when a resource not found
     ErrNotFound = errors.New("Models: resource not found")
@@ -66,6 +68,12 @@ func (u *UserService)ByEmail(email string) (*User, error){
 }
 //Create New user 
 func (u *UserService)Create(user *User) error{
+    hashbyte, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+    if err != nil{
+        return err
+    }
+    user.PasswordHash = string(hashbyte)
+    user.Password = ""
     return u.db.Create(user).Error
 }
 
@@ -105,10 +113,12 @@ func (u *UserService) Close() error{
 
 type User struct{
     gorm.Model
-    Email    string `gorm:"unique_index;not null"`
+    Email    string `gorm:"unique;unique_index;not null"`
     Name  string  
+    Password string `gorm:"-"`
+    PasswordHash string `gorm:"not null"`
 }
-
+ 
 func first(db *gorm.DB, data  interface{}) error{
     err := db.First(data).Error
     if err == gorm.ErrRecordNotFound{

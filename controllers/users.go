@@ -20,9 +20,9 @@ type User struct{
      userServ *models.UserService
 }
 type SignupForm struct{
-    Email string `schema:"email,required"`
-    Name string `schema:"name,required"`
-    Password string `schema:"password"`
+     Email string `schema:"email,required"`
+     Name string `schema:"name,required"`
+     Password string `schema:"password"`
 }
 //Render the signup page (views/users/new.gohtml) 
 //create  a new user account
@@ -48,10 +48,11 @@ func(u *User)Create(w http.ResponseWriter, req *http.Request){
      user := models.User{
           Email: dataForm.Email,
           Name: dataForm.Name,
+          Password: dataForm.Password,
      }
      if err := u.userServ.Create(&user); err != nil{
            http.Error(w, err.Error(), http.StatusInternalServerError)
            return
      }
-     fmt.Fprintln(w, dataForm)
+     fmt.Fprintln(w, dataForm,user.Password )
 }
