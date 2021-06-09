@@ -29,6 +29,8 @@ func main() {
   newStatic := controllers.NewStatic()
   newUserControllers  := controllers.NewUser(userServ)
  
+
+  
  r := mux.NewRouter()
  
  r.Handle("/",newStatic.HomeView).Methods("GET")
