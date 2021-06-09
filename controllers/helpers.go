@@ -7,7 +7,7 @@ import (
 )
 
 
-func parseForm(req * http.Request, dst interface{}) error {
+func parseForm(req * http.Request, dst interface{})   {
 
         if err := req.ParseForm(); err != nil{
                 panic(err)  
@@ -18,7 +18,7 @@ func parseForm(req * http.Request, dst interface{}) error {
         if err != nil{
                 panic(err)  
         }
-        return nil 
+         
 }
 
  

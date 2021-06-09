@@ -50,26 +50,53 @@ func(u *User)Create(w http.ResponseWriter, req *http.Request){
            http.Error(w, err.Error(), http.StatusInternalServerError)
            return
      }
-     fmt.Fprintln(w, dataForm,user.Password )
+     signIn(w, &user)
+     http.Redirect(w, req, "/cookietest", http.StatusFound)
 }
 //Handle login Post request
 //By check email address and password is correct or no
 //and login if are correct
 
 func (u *User)Login(w http.ResponseWriter, req *http.Request){
-        form := LoginForm{}
-        parseForm(req, &form)
-        user, err:= u.userServ.Authenticate(form.Email, form.Password)
-        switch err{
-        case models.ErrNotFound:
-           fmt.Fprintln(w, "Invalid email address")
-        case models.ErrInvalidPassword:
-          fmt.Fprintln(w, "Password not correct")
-        case nil:
-          fmt.Fprintln(w, user)
-        default:
-          http.Error(w, err.Error(), http.StatusInternalServerError)
-        }
-       
-        
+     form := LoginForm{}
+     parseForm(req, &form)
+     user, err:= u.userServ.Authenticate(form.Email, form.Password)
+     if err != nil{
+          switch err {
+               case models.ErrNotFound:
+               fmt.Fprintln(w, "Invalid email address")
+               case models.ErrInvalidPassword:
+               fmt.Fprintln(w, "Invalid Password")
+               default :
+               http.Error(w, err.Error(), http.StatusInternalServerError)
+          }
+          return   
+     }
+
+     signIn(w, user)
+      http.Redirect(w, req, "/cookietest", http.StatusFound)
 }
+
+func (u *User)CookieTest(w http.ResponseWriter, req  *http.Request){
+     cookie, err := req.Cookie("email")
+     if err != nil{
+         http.Error(w, err.Error(), http.StatusInternalServerError)
+         return
+     }
+     fmt.Fprintf(w, "your Email is %v\n", cookie.Value )  
+ 
+ }
+
+ func signIn(w http.ResponseWriter, user *models.User){
+      userEmailCookie := http.Cookie{
+          Name:"email",
+          Value: user.Email,
+      }
+      userNameCookie := http.Cookie{
+          Name:"name",
+          Value: user.Name,
+      }
+
+      http.SetCookie(w, &userEmailCookie)
+      http.SetCookie(w, &userNameCookie)
+ }

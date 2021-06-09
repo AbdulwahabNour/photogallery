@@ -38,7 +38,7 @@ func main() {
  r.Handle("/login", newUserControllers.LoginView).Methods("GET")
  
  r.HandleFunc("/login", newUserControllers.Login).Methods("POST")
-
+ r.HandleFunc("/cookietest", newUserControllers.CookieTest).Methods("GET")
  r.HandleFunc("/signup", newUserControllers.Create).Methods("POST")
  
  http.ListenAndServe(":3000", r)
