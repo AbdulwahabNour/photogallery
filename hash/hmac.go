@@ -7,6 +7,7 @@ import (
 	"hash"
 )
 
+// NewHmac take key as string and Create a new HMAC object
 func NewHMAC(key string) HMAC{
     h := hmac.New(sha512.New,[]byte(key))
     return HMAC{hmac:h}
@@ -21,7 +22,7 @@ type HMAC struct{
 }
 /*
 ** Hash Function take input string and hash it
-** Withe secret key when HMAC object was created
+** With secret key when HMAC object was created
 */
 func(h HMAC) Hash(data string) string{
     h.hmac.Reset()

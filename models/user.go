@@ -7,6 +7,8 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"lenslocked.com/hash"
+	"lenslocked.com/rand"
 )
  
  
@@ -19,17 +21,23 @@ var (
     ErrInvalidPassword = errors.New("Models: Incorrect password")
 )
 
-const userPassPepper= "photogallery-App"
+const (
+    userPassPepper = "photogallery-App"
+    hmacSecretkey  = "This-Must-Key-For-HMAC" 
+)
 func NewUserService(psqlInfo string)(*UserService, error){
+
      db, err:= gorm.Open(postgres.Open(psqlInfo), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
      if err != nil{
          return nil, err
      }
-    return &UserService{db:db}, nil
+     hmac := hash.NewHMAC(hmacSecretkey)
+    return &UserService{db:db, hmac: hmac}, nil
 }
 
 type UserService struct{
     db *gorm.DB
+    hmac hash.HMAC 
 }
 /*
 ** ByID will look up the user by id
@@ -49,7 +57,23 @@ func (u *UserService) ByID(id uint)(*User, error){
     }
    return nil, err
 }
-
+/*
+** ByHash Function will look up the user by RememberHash
+** if RememberHash is found will return the user for this RememberHash
+** if not found will return nil for user and error
+*/
+func (u *UserService) ByHash(token string)(* User, error){
+    var user User
+    
+    hashedToken := u.hmac.Hash(token)
+    db := u.db.Where("remember_hash = ?", hashedToken)
+    err := first(db, &user)
+    if err != nil{
+        return nil, err
+    }
+    return  &user, err
+  
+}
 /*
 ** ByEmail look up auser with given email
 ** and return that user
@@ -76,6 +100,15 @@ func (u *UserService)Create(user *User) error{
     }
     user.PasswordHash = string(hashbyte)
     user.Password = ""
+    if user.Rememer == ""{
+        token, err := rand.RememberToken()
+        if err != nil{
+            return err
+        }
+        user.Rememer = token
+    }
+ 
+     user.RememberHash = u.hmac.Hash(user.Rememer)
     return u.db.Create(user).Error
 }
 
@@ -91,6 +124,9 @@ func (u *UserService)Last(user *User) error{
 
 //update User
 func (u *UserService)Update(user *User)error{
+    if user.Rememer != ""{
+        user.RememberHash = u.hmac.Hash(user.Rememer)
+   }
     return u.db.Save(&user).Error
 }
 //Delete User
@@ -132,13 +168,7 @@ func (u *UserService)Authenticate(email string, password string)(*User, error){
       return foundUser, nil
 }
 
-type User struct{
-    gorm.Model
-    Email    string `gorm:"unique;unique_index;not null"`
-    Name  string  
-    Password string `gorm:"-"`
-    PasswordHash string `gorm:"not null"`
-}
+
  
 func first(db *gorm.DB, data  interface{}) error{
     err := db.First(data).Error
@@ -153,4 +183,14 @@ func generatePassword(password []byte)([]byte,error){
        return nil, err
     }
     return hashbyte, nil
+}
+
+type User struct{
+    gorm.Model
+    Email    string `gorm:"uniqueIndex;not null"`
+    Name  string  
+    Password string `gorm:"-"`
+    PasswordHash string `gorm:"not null"`
+    Rememer string `gorm:"-"`
+    RememberHash string `gorm:"not null;uniqueIndex"`
 }
