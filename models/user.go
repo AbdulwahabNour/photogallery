@@ -58,13 +58,13 @@ func (u *UserService) ByID(id uint)(*User, error){
    return nil, err
 }
 /*
-** ByHash Function will look up the user by RememberHash
+** ByRememberToken Function Take token and hash it 
+** and look up the user by hashedToken  
 ** if RememberHash is found will return the user for this RememberHash
 ** if not found will return nil for user and error
 */
-func (u *UserService) ByHash(token string)(* User, error){
+func (u *UserService) ByRememberToken(token string)(* User, error){
     var user User
-    
     hashedToken := u.hmac.Hash(token)
     db := u.db.Where("remember_hash = ?", hashedToken)
     err := first(db, &user)
@@ -100,15 +100,15 @@ func (u *UserService)Create(user *User) error{
     }
     user.PasswordHash = string(hashbyte)
     user.Password = ""
-    if user.Rememer == ""{
+    if user.Remember == ""{
         token, err := rand.RememberToken()
         if err != nil{
             return err
         }
-        user.Rememer = token
+        user.Remember = token
     }
  
-     user.RememberHash = u.hmac.Hash(user.Rememer)
+     user.RememberHash = u.hmac.Hash(user.Remember)
     return u.db.Create(user).Error
 }
 
@@ -123,9 +123,9 @@ func (u *UserService)Last(user *User) error{
 }
 
 //update User
-func (u *UserService)Update(user *User)error{
-    if user.Rememer != ""{
-        user.RememberHash = u.hmac.Hash(user.Rememer)
+func (u *UserService) Update(user *User)error{
+    if user.Remember != ""{
+        user.RememberHash = u.hmac.Hash(user.Remember)
    }
     return u.db.Save(&user).Error
 }
@@ -191,6 +191,6 @@ type User struct{
     Name  string  
     Password string `gorm:"-"`
     PasswordHash string `gorm:"not null"`
-    Rememer string `gorm:"-"`
+    Remember string `gorm:"-"`
     RememberHash string `gorm:"not null;uniqueIndex"`
 }

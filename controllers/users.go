@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"lenslocked.com/models"
+	"lenslocked.com/rand"
 	"lenslocked.com/views"
 )
 
@@ -50,7 +51,12 @@ func(u *User)Create(w http.ResponseWriter, req *http.Request){
            http.Error(w, err.Error(), http.StatusInternalServerError)
            return
      }
-     signIn(w, &user)
+   
+     err := u.signIn(w, &user)
+     if err != nil{
+          http.Error(w, err.Error(), http.StatusInternalServerError)
+           return
+     }
      http.Redirect(w, req, "/cookietest", http.StatusFound)
 }
 //Handle login Post request
@@ -71,32 +77,48 @@ func (u *User)Login(w http.ResponseWriter, req *http.Request){
                http.Error(w, err.Error(), http.StatusInternalServerError)
           }
           return   
-     }
-
-     signIn(w, user)
+     } 
+  
+      err = u.signIn(w, user)
+      if err != nil{
+          http.Error(w, err.Error(), http.StatusInternalServerError)
+          return
+      }
       http.Redirect(w, req, "/cookietest", http.StatusFound)
 }
 
 func (u *User)CookieTest(w http.ResponseWriter, req  *http.Request){
-     cookie, err := req.Cookie("email")
+     cookie, err := req.Cookie("remember_token")
      if err != nil{
          http.Error(w, err.Error(), http.StatusInternalServerError)
          return
      }
-     fmt.Fprintf(w, "your Email is %v\n", cookie.Value )  
+     user, err  := u.userServ.ByRememberToken(cookie.Value)
+     if err != nil{
+          http.Error(w, err.Error(), http.StatusInternalServerError)
+          return
+     }
+     fmt.Fprintf(w, "your Email is %v and your Name is %v and your Remeber token is %v and your remember hash token is %v", user.Email, user.Name, user.Remember, user.RememberHash )  
  
  }
 
- func signIn(w http.ResponseWriter, user *models.User){
+ func (u *User)signIn(w http.ResponseWriter, user *models.User) error{ 
+      if user.Remember == ""{
+           token, err := rand.RememberToken()
+           if err != nil {
+                return err
+           }
+           user.Remember = token
+           err = u.userServ.Update(user)
+          if err != nil {
+               return err
+          }
+      }
+      fmt.Println(user)
       userEmailCookie := http.Cookie{
-          Name:"email",
-          Value: user.Email,
+          Name:"remember_token",
+          Value: user.Remember,
       }
-      userNameCookie := http.Cookie{
-          Name:"name",
-          Value: user.Name,
-      }
-
       http.SetCookie(w, &userEmailCookie)
-      http.SetCookie(w, &userNameCookie)
+  return nil
  }

@@ -3,7 +3,6 @@ package rand
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"fmt"
 )
 const RememberTokenByte = 32
 /*
@@ -28,7 +27,7 @@ const RememberTokenByte = 32
      if err != nil {
          return "", err
      }
-     fmt.Println(b)
+ 
      return base64.URLEncoding.EncodeToString(b), nil 
  }
 /*
