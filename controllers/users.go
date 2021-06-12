@@ -118,6 +118,8 @@ func (u *User)CookieTest(w http.ResponseWriter, req  *http.Request){
       userEmailCookie := http.Cookie{
           Name:"remember_token",
           Value: user.Remember,
+          HttpOnly: true,
+
       }
       http.SetCookie(w, &userEmailCookie)
   return nil
