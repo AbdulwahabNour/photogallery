@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"testing"
 	"time"
-
-	"gorm.io/gorm/logger"
 )
 
 func testingUserService() (*UserService, error){
@@ -20,7 +18,7 @@ func testingUserService() (*UserService, error){
 
     psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
     us, err := NewUserService(psqlInfo)
-    us.db.Config.Logger = logger.Default.LogMode(logger.Silent )
+    
     if err != nil {
         return nil, err
     }
