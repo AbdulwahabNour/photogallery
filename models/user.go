@@ -93,8 +93,17 @@ type userValidator struct{
 //   and return that user.
  
 func (u *userValidator) ByRememberToken(RememberToken string)(* User, error){
-    hashedToken := u.hmac.Hash(RememberToken)
-    return u.UserDB.ByRememberToken(hashedToken)
+
+    user := User{
+        Remember: RememberToken,
+    }
+    err :=  runuserValFunc(&user, u.hmacRemember)
+    if err != nil{
+        return nil,err
+    }
+
+ 
+    return u.UserDB.ByRememberToken(user.RememberHash)
 }
  
 // Create Function create user by  
@@ -105,10 +114,6 @@ func (u *userValidator) ByRememberToken(RememberToken string)(* User, error){
 // on the subsequent UserDB 
  
 func (u *userValidator)Create(user *User) error{
-    err :=  runuserValFunc(user,  u.bcryptPassword)
-    if err != nil{
-        return err
-    }
 
     if user.Remember == ""{
         token, err := rand.RememberToken()
@@ -117,8 +122,11 @@ func (u *userValidator)Create(user *User) error{
         }
         user.Remember = token
     }
- 
-     user.RememberHash = u.hmac.Hash(user.Remember)
+
+    err :=  runuserValFunc(user,  u.bcryptPassword, u.hmacRemember)
+    if err != nil{
+        return err
+    }
 
      return u.UserDB.Create(user)
 }
@@ -146,14 +154,11 @@ func (u *userValidator) bcryptPassword(user *User) error{
 // Update function will hash user remember token if it is provided
 // then send User to Update on the subsequent UserDB
 func (u *userValidator) Update(user *User) error{
-    err :=  runuserValFunc(user,  u.bcryptPassword)
+    err :=  runuserValFunc(user,  u.bcryptPassword,  u.hmacRemember)
     if err != nil{
         return err
     }
     
-    if user.Remember != ""{
-        user.RememberHash = u.hmac.Hash(user.Remember)
-   }
     return u.UserDB.Update(user)
 }
 
@@ -163,7 +168,14 @@ func(u * userValidator)Delete(id uint) error{
     }
     return u.UserDB.Delete(id)
 }
- 
+func (u *userValidator) hmacRemember(user *User)error{
+
+    if user.Remember == ""{
+        return nil
+    }
+    user.RememberHash = u.hmac.Hash(user.Remember)
+    return nil
+}
  
 func  newUserGorm(psqlInfo string) (*userGorm, error){
     db, err:= gorm.Open(postgres.Open(psqlInfo), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
@@ -172,8 +184,6 @@ func  newUserGorm(psqlInfo string) (*userGorm, error){
     }
   return &userGorm{db: db}, nil
 }
-
-
 
 var _ UserDB = &userGorm{}
 
