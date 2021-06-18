@@ -42,8 +42,11 @@ func NewUserService(psqlInfo string)(*UserService, error){
      if err != nil{
          return nil, err
      }
-     
-    return &UserService{UserDB:  &userValidator{UserDB:ug}}, nil
+     hmac := hash.NewHMAC(hmacSecretkey)
+    return &UserService{ 
+                         UserDB:  &userValidator{UserDB:ug,
+                                                 hmac: hmac},
+                         }, nil
 }
 //UserDB is used to interact with the users database
 type UserDB interface{
@@ -70,10 +73,96 @@ type UserService struct{
     UserDB
 }
 
+type userValFunc func(*User) error
+
+func runuserValFunc(user *User, fns ...userValFunc) error{
+    for _, f := range fns{
+        err :=  f(user)
+        if err != nil{
+            return err
+        }
+    }
+    return nil
+}
 type userValidator struct{
     UserDB
+    hmac hash.HMAC 
+}
+ 
+//   ByRememberToken Function Take RememberToken and hash it 
+//   and return that user.
+ 
+func (u *userValidator) ByRememberToken(RememberToken string)(* User, error){
+    hashedToken := u.hmac.Hash(RememberToken)
+    return u.UserDB.ByRememberToken(hashedToken)
+}
+ 
+// Create Function create user by  
+// adding pepper to user password  
+// generate password from them 
+// create remember hash
+// then send User to Create
+// on the subsequent UserDB 
+ 
+func (u *userValidator)Create(user *User) error{
+    err :=  runuserValFunc(user,  u.bcryptPassword)
+    if err != nil{
+        return err
+    }
+
+    if user.Remember == ""{
+        token, err := rand.RememberToken()
+        if err != nil{
+            return err
+        }
+        user.Remember = token
+    }
+ 
+     user.RememberHash = u.hmac.Hash(user.Remember)
+
+     return u.UserDB.Create(user)
+}
+// bcryptPassword will  hash auser's password with
+// predefined pepper and bycrpt if the password field
+// is not the empty string
+func (u *userValidator) bcryptPassword(user *User) error{
+
+    if user.Password == ""{
+        return nil
+    }
+
+    password := []byte(user.Password + userPassPepper)
+    hashbyte, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
+    if err != nil{
+        return err
+    } 
+    user.PasswordHash = string(hashbyte)
+    user.Password = ""
+   
+    return  nil
 }
 
+ 
+// Update function will hash user remember token if it is provided
+// then send User to Update on the subsequent UserDB
+func (u *userValidator) Update(user *User) error{
+    err :=  runuserValFunc(user,  u.bcryptPassword)
+    if err != nil{
+        return err
+    }
+    
+    if user.Remember != ""{
+        user.RememberHash = u.hmac.Hash(user.Remember)
+   }
+    return u.UserDB.Update(user)
+}
+
+func(u * userValidator)Delete(id uint) error{
+    if id <=  0 {
+     return ErrInvalidID
+    }
+    return u.UserDB.Delete(id)
+}
  
  
 func  newUserGorm(psqlInfo string) (*userGorm, error){
@@ -81,22 +170,23 @@ func  newUserGorm(psqlInfo string) (*userGorm, error){
     if err != nil{
         return nil, err
     }
-    hmac := hash.NewHMAC(hmacSecretkey)
-  return &userGorm{db: db, hmac: hmac}, nil
+  return &userGorm{db: db}, nil
 }
+
+
+
 var _ UserDB = &userGorm{}
 
 type userGorm struct{
     db *gorm.DB
-    hmac hash.HMAC 
 }
-/*
-** ByID will look up the user by id
-** if user is found we will return nil error
-** if user not found will return nil and ErrNotFound 
-** if there is another error, we will return  an error with more information
-**
-*/
+ 
+//   ByID will look up the user by id
+//   if user is found we will return nil error
+//   if user not found will return nil and ErrNotFound 
+//   if there is another error, we will return  an error with more information
+ 
+ 
 func (u *userGorm) ByID(id uint)(*User, error){
    
     var user User
@@ -108,31 +198,29 @@ func (u *userGorm) ByID(id uint)(*User, error){
     }
    return nil, err
 }
-/*
-** ByRememberToken Function Take token and hash it 
-** and look up the user by hashedToken  
-** if RememberHash is found will return the user for this RememberHash
-** if not found will return nil for user and error
-*/
-func (u *userGorm) ByRememberToken(token string)(* User, error){
+ 
+//   ByRememberToken Function Take Hashtoken  
+//   and look up the user by hashedToken  
+//   if Hashtoken is found will return the user  
+//   if not found will return nil for user and error
+ 
+func (u *userGorm) ByRememberToken(Hashtoken string)(* User, error){
     var user User
-    hashedToken := u.hmac.Hash(token)
-    db := u.db.Where("remember_hash = ?", hashedToken)
+    db := u.db.Where("remember_hash = ?", Hashtoken)
     err := first(db, &user)
     if err != nil{
         return nil, err
     }
     return  &user, err
-  
 }
-/*
-** ByEmail look up auser with given email
-** and return that user
-** If user found will return the user and nil
-** If user not found will return nil for user and ErrNotFound
-** If there is another  error, we will return an error with more
-** information about  what went wrong 
-*/
+ 
+//   ByEmail look up auser with given email
+//   and return that user
+//   If user found will return the user and nil
+//   If user not found will return nil for user and ErrNotFound
+//   If there is another  error, we will return an error with more
+//   information about  what went wrong 
+ 
 func (u *userGorm)ByEmail(email string) (*User, error){
     var user User
     db := u.db.Where("email = ?", email)
@@ -145,37 +233,18 @@ func (u *userGorm)ByEmail(email string) (*User, error){
 }
 //Create New user 
 func (u *userGorm)Create(user *User) error{
-    hashbyte, err := generatePassword([]byte(user.Password + userPassPepper))
-    if err != nil{
-        return err
-    }
-    user.PasswordHash = string(hashbyte)
-    user.Password = ""
-    if user.Remember == ""{
-        token, err := rand.RememberToken()
-        if err != nil{
-            return err
-        }
-        user.Remember = token
-    }
- 
-     user.RememberHash = u.hmac.Hash(user.Remember)
-    return u.db.Create(user).Error
+     return u.db.Create(user).Error
 }
 
  
 
 //update User
 func (u *userGorm) Update(user *User)error{
-    if user.Remember != ""{
-        user.RememberHash = u.hmac.Hash(user.Remember)
-   }
     return u.db.Save(&user).Error
 }
 //Delete User
 func(u * userGorm)Delete(id uint) error{
-    var user User 
-    user.ID = id
+    user := User{Model:gorm.Model{ID: id}}
     return u.db.Delete(&user).Error
 }
 //Migrate user table
@@ -223,12 +292,5 @@ func first(db *gorm.DB, data  interface{}) error{
         return  ErrNotFound
     }
     return  err
-}
-func generatePassword(password []byte)([]byte,error){
-    hashbyte, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
-    if err != nil{
-       return nil, err
-    }
-    return hashbyte, nil
 }
 
