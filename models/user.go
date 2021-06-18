@@ -101,8 +101,6 @@ func (u *userValidator) ByRememberToken(RememberToken string)(* User, error){
     if err != nil{
         return nil,err
     }
-
- 
     return u.UserDB.ByRememberToken(user.RememberHash)
 }
  
@@ -115,20 +113,11 @@ func (u *userValidator) ByRememberToken(RememberToken string)(* User, error){
  
 func (u *userValidator)Create(user *User) error{
 
-    if user.Remember == ""{
-        token, err := rand.RememberToken()
-        if err != nil{
-            return err
-        }
-        user.Remember = token
-    }
-
-    err :=  runuserValFunc(user,  u.bcryptPassword, u.hmacRemember)
+    err  :=  runuserValFunc(user, u.bcryptPassword, u.setRememberToken, u.hmacRemember )
     if err != nil{
-        return err
+         return err
     }
-
-     return u.UserDB.Create(user)
+    return u.UserDB.Create(user)
 }
 // bcryptPassword will  hash auser's password with
 // predefined pepper and bycrpt if the password field
@@ -174,6 +163,16 @@ func (u *userValidator) hmacRemember(user *User)error{
         return nil
     }
     user.RememberHash = u.hmac.Hash(user.Remember)
+    return nil
+}
+func (u *userValidator)setRememberToken(user *User) error{
+    if user.Remember == ""{
+        token, err := rand.RememberToken()
+        if err != nil{
+            return err
+        }
+        user.Remember = token
+    }
     return nil
 }
  
