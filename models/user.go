@@ -15,7 +15,7 @@ import (
  
  
 var ( 
-    //ErrNotFound is returned when a resource not found
+    // ErrNotFound is returned when a resource not found
     ErrNotFound = errors.New("Models: resource not found")
     // ErrInvalid is returned when an invalid id  is provided
     ErrInvalidID = errors.New("Models: ID  provided was invalid")
@@ -27,6 +27,16 @@ var (
     // ErrEmailTaken is returned when an update or create is attempted
     // with an email address that is already in use.
     ErrEmailTaken = errors.New("Email address is already taken")
+
+    // ErrPasswordTooShort is returned  when an update or create is attempted
+    // with a user password that is less than 8 characters
+    ErrPasswordTooShort = errors.New("Password is too short must contain at least 8 characters")
+
+    // ErrPasswordTooLong is returned when an update or create is attempted
+    // with a user password that is more than 100 characters
+    ErrPasswordTooLong = errors.New("Password is too long must contain at least 100 characters")
+
+    ErrPasswordRequired =errors.New("Password is  required")
 
     
 )
@@ -128,7 +138,9 @@ func (u *userValidator) ByRememberToken(RememberToken string)(* User, error){
  
 func (u *userValidator)Create(user *User) error{
    
-    err  :=  runuserValFunc(user, u.bcryptPassword, 
+    err  :=  runuserValFunc(user, u.passwordRequired,
+                                  u.checkPasswordLength,
+                                  u.bcryptPassword, 
                                   u.setRememberToken, 
                                   u.hmacRemember, 
                                   u.requireEmail, 
@@ -146,6 +158,7 @@ func (u *userValidator)Create(user *User) error{
 func (u *userValidator) Update(user *User) error{
  
     err :=  runuserValFunc(user,  u.bcryptPassword,
+                                  u.checkPasswordLength,
                                   u.hmacRemember,
                                   u.requireEmail, 
                                   u.normalizeEmail,
@@ -193,7 +206,27 @@ func (u *userValidator) bcryptPassword(user *User) error{
    
     return  nil
 }
+func (u *userValidator)checkPasswordLength(user *User) error{
+ 
+   if  user.Password == ""{
+       return nil
+   }
 
+   if len(user.Password) < 6{
+       return   ErrPasswordTooShort
+   }
+   if len(user.Password) > 100 {
+       return   ErrPasswordTooLong
+   }
+   return nil   
+}
+
+func (u *userValidator) passwordRequired(user *User) error{
+    if user.Password == ""{
+        return ErrPasswordRequired
+    }
+    return nil
+}
 func (u *userValidator) hmacRemember(user *User)error{
 
     if user.Remember == ""{
