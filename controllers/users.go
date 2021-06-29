@@ -17,16 +17,16 @@ func NewUser(us *models.UserService) *User{
                   LoginView:views.NewView("users/login"), 
                   userServ:us}
 }
-
+ 
 type User struct{
      NewView *views.View
      LoginView *views.View
      userServ *models.UserService
 }
 type SignupForm struct{
-     Email string `schema:"email,required"`
-     Name string `schema:"name,required"`
-     Password string `schema:"password"`
+          Email string `schema:"email"`
+          Name string `schema:"name"`
+          Password string `schema:"password"`
 }
 
 type LoginForm struct{
@@ -39,7 +39,6 @@ type LoginForm struct{
 //POST /signup
 func(u *User)Create(w http.ResponseWriter, req *http.Request){
      var dataForm SignupForm
-     
      parseForm(req, &dataForm)
      
      user := models.User{
@@ -48,7 +47,12 @@ func(u *User)Create(w http.ResponseWriter, req *http.Request){
           Password: dataForm.Password,
      }
      if err := u.userServ.Create(&user); err != nil{
-           http.Error(w, err.Error(), http.StatusInternalServerError)
+          type Alert struct{
+               Level string
+               Message string
+          }
+          
+            u.NewView.Render(w, struct {Alert}{Alert {Level: "danger", Message: err.Error(),}})
            return
      }
    
@@ -119,7 +123,6 @@ func (u *User)CookieTest(w http.ResponseWriter, req  *http.Request){
           Name:"remember_token",
           Value: user.Remember,
           HttpOnly: true,
-          
       }
       http.SetCookie(w, &userEmailCookie)
   return nil

@@ -1,9 +1,13 @@
-{{define "yield"}}
+{{define "yield" }}
 <div class="row">
     <div class="col-md-6 col-md-offset-3">
         <div class="panel panel-primary ">
             <div class="panel-heading">SignUp</div>
             <div class="panel-body">
+                {{if .Alert}}
+                {{template "alert" .Alert}}
+                {{end}}
+
                 {{template "signupform"}}
             </div>
             <div class="panel-footer">Panel footer</div>
@@ -12,8 +16,6 @@
     </div>
 
 </div>
-
-
 {{end}}
 
 {{define "signupform"}}
