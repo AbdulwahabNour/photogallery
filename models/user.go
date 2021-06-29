@@ -35,11 +35,22 @@ var (
     // ErrPasswordTooLong is returned when an update or create is attempted
     // with a user password that is more than 100 characters
     ErrPasswordTooLong = errors.New("Password is too long must contain at least 100 characters")
-
+    // ErrPasswordRequired is returned when password is empty
     ErrPasswordRequired = errors.New("Password is  required")
     ErrRememberTooShort = errors.New("Remember token is too short")
-
+    // ErrRememberHashRequired is returned when Rememberhash is empty
     ErrRememberHashRequired = errors.New("Rememberhash is required")
+     // ErrNameRequired is returned when user name is empty
+    ErrNameRequired = errors.New("Name is required ")
+
+    // ErrNameTooShort is returned  when an update or create is attempted
+    // with a user name that is less than 8 characters
+    ErrNameTooShort = errors.New("Name is too short must contain at least 8 characters")
+
+     // ErrNameTooLong is returned when an update or create is attempted
+    // with a user name that is more than 100 characters
+    ErrNameTooLong = errors.New("Name is too long must contain at least 100 characters")
+    
     
 )
 
@@ -140,7 +151,9 @@ func (u *userValidator) ByRememberToken(RememberToken string)(* User, error){
  
 func (u *userValidator)Create(user *User) error{
    
-    err  :=  runuserValFunc(user, u.passwordRequired,
+    err  :=  runuserValFunc(user, u.nameRequire,
+                                  u.checkNameLength,
+                                  u.passwordRequired,
                                   u.checkPasswordLength,
                                   u.bcryptPassword,
                                   u.setRememberToken, 
@@ -161,7 +174,9 @@ func (u *userValidator)Create(user *User) error{
 // then send User to Update on the subsequent UserDB
 func (u *userValidator) Update(user *User) error{
  
-    err :=  runuserValFunc(user,  u.bcryptPassword,
+    err :=  runuserValFunc(user,  u.nameRequire,
+                                  u.checkNameLength,
+                                  u.bcryptPassword,
                                   u.checkPasswordLength,
                                   u.rememberMinBytes,
                                   u.hmacRemember,
@@ -212,15 +227,15 @@ func (u *userValidator) bcryptPassword(user *User) error{
     return  nil
 }
 func (u *userValidator)checkPasswordLength(user *User) error{
- 
+   
    if  user.Password == ""{
        return nil
    }
-
-   if len(user.Password) < 6{
+   passwordLength := len(user.Password)
+   if passwordLength < 6{
        return   ErrPasswordTooShort
    }
-   if len(user.Password) > 100 {
+   if passwordLength > 100 {
        return   ErrPasswordTooLong
    }
    return nil   
@@ -305,6 +320,25 @@ func (u *userValidator) rememberMinBytes(user *User) error{
          return ErrRememberTooShort
      }
     return nil
+  }
+  func (u *userValidator) nameRequire(user *User)error {
+      if user.Name == ""{
+          return ErrNameRequired
+      }
+      return nil
+  }
+  func (u *userValidator) checkNameLength(user *User)error {
+      if user.Name == ""{
+          return nil
+      }
+       nameLength := len(user.Name)
+       if nameLength < 6{
+           return ErrNameTooShort
+       }
+       if nameLength > 100{
+        return ErrNameTooLong
+      }
+     return nil
   }
 
  
