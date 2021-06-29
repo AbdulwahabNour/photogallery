@@ -36,8 +36,10 @@ var (
     // with a user password that is more than 100 characters
     ErrPasswordTooLong = errors.New("Password is too long must contain at least 100 characters")
 
-    ErrPasswordRequired =errors.New("Password is  required")
+    ErrPasswordRequired = errors.New("Password is  required")
+    ErrRememberTooShort = errors.New("Remember token is too short")
 
+    ErrRememberHashRequired = errors.New("Rememberhash is required")
     
 )
 
@@ -140,9 +142,11 @@ func (u *userValidator)Create(user *User) error{
    
     err  :=  runuserValFunc(user, u.passwordRequired,
                                   u.checkPasswordLength,
-                                  u.bcryptPassword, 
+                                  u.bcryptPassword,
                                   u.setRememberToken, 
+                                  u.rememberMinBytes,
                                   u.hmacRemember, 
+                                  u.rememberHashRequired,
                                   u.requireEmail, 
                                   u.normalizeEmail, 
                                   u.emailFormat,
@@ -159,6 +163,7 @@ func (u *userValidator) Update(user *User) error{
  
     err :=  runuserValFunc(user,  u.bcryptPassword,
                                   u.checkPasswordLength,
+                                  u.rememberMinBytes,
                                   u.hmacRemember,
                                   u.requireEmail, 
                                   u.normalizeEmail,
@@ -235,6 +240,14 @@ func (u *userValidator) hmacRemember(user *User)error{
     user.RememberHash = u.hmac.Hash(user.Remember)
     return nil
 }
+
+func (u *userValidator) rememberHashRequired(user *User) error{
+    if user.RememberHash == ""{
+        return ErrRememberHashRequired
+    }
+    return nil
+}
+
 func (u *userValidator)setRememberToken(user *User) error{
     if user.Remember == ""{
         token, err := rand.RememberToken()
@@ -245,6 +258,8 @@ func (u *userValidator)setRememberToken(user *User) error{
     }
     return nil
 }
+
+
 func (u *userValidator) normalizeEmail(user *User) error{
     user.Email = strings.ToLower(user.Email)
     user.Email = strings.TrimSpace(user.Email)
@@ -276,6 +291,23 @@ func (u *userValidator) emailIsAvail(user *User) error{
     }
     return nil
 }
+func (u *userValidator) rememberMinBytes(user *User) error{
+     if user.Remember == ""{
+         return nil
+     }
+      
+     n, err := rand.NBytes(user.Remember)
+            if err != nil{
+                return err
+            }
+
+     if n < 32 {
+         return ErrRememberTooShort
+     }
+    return nil
+  }
+
+ 
  
 func  newUserGorm(psqlInfo string) (*userGorm, error){
     db, err:= gorm.Open(postgres.Open(psqlInfo), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})

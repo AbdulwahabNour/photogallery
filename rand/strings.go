@@ -17,6 +17,7 @@ const RememberTokenByte = 32
     }    
     return b, nil
  }
+ 
 
  /*
  ** String will generate a byte slice of size numBytes
@@ -29,6 +30,14 @@ const RememberTokenByte = 32
      }
  
      return base64.URLEncoding.EncodeToString(b), nil 
+ }
+
+ func  NBytes( base64String  string) (int, error){
+  b, err := base64.URLEncoding.DecodeString(base64String)
+  if err != nil{
+      return -1, err
+  }
+    return len(b), nil
  }
 /*
 ** RememberToken is function to generate token
