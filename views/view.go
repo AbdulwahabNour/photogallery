@@ -27,8 +27,7 @@ func NewView( templ ...string) *View {
      
      return &View{Template: t, Body: "body"}
 }
-//Qazwsxedc11@111z
-//Qazwsxedc11@111z2
+
 type View struct{
      Template *template.Template
      Body string
