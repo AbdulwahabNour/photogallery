@@ -176,8 +176,8 @@ func (u *userValidator) Update(user *User) error{
  
     err :=  runuserValFunc(user,  u.nameRequire,
                                   u.checkNameLength,
-                                  u.bcryptPassword,
                                   u.checkPasswordLength,
+                                  u.bcryptPassword,
                                   u.rememberMinBytes,
                                   u.hmacRemember,
                                   u.requireEmail, 

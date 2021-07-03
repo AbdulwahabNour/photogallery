@@ -39,7 +39,11 @@ type LoginForm struct{
 //POST /signup
 func(u *User)Create(w http.ResponseWriter, req *http.Request){
      var dataForm SignupForm
-     parseForm(req, &dataForm)
+     var vd views.Data
+     err := parseForm(req, &dataForm)
+     if err!= nil{
+          
+     }
      
      user := models.User{
           Email: dataForm.Email,
@@ -47,12 +51,12 @@ func(u *User)Create(w http.ResponseWriter, req *http.Request){
           Password: dataForm.Password,
      }
      if err := u.userServ.Create(&user); err != nil{
-          type Alert struct{
-               Level string
-               Message string
-          }
           
-            u.NewView.Render(w, struct {Alert}{Alert {Level: "danger", Message: err.Error(),}})
+            vd = views.Data{
+               Alert: &views.Alert{Level:views.AlertLvlError,
+                                  Message: err.Error(),   },                  
+            }
+            u.NewView.Render(w, vd)
            return
      }
    

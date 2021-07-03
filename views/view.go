@@ -38,6 +38,12 @@ func (v *View)ServeHTTP(w http.ResponseWriter, r * http.Request){
         }
 }
 func (v *View) Render(w http.ResponseWriter, data interface{}) error{
+
+      switch data.(type){
+      case Data:
+      default:
+        data = Data{Yield: data}
+      }
         err := v.Template.ExecuteTemplate(w, v.Body, data)
         return err
 }
