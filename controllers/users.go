@@ -41,8 +41,14 @@ func(u *User)Create(w http.ResponseWriter, req *http.Request){
      var dataForm SignupForm
      var vd views.Data
      err := parseForm(req, &dataForm)
-     if err!= nil{
-          
+
+     if err!= nil {
+           vd = views.Data{
+                Alert: &views.Alert{Level: views.AlertLvlError,
+                                    Message: views.AlertMsgGeneric,},
+           }
+          u.NewView.Render(w, vd)
+           return
      }
      
      user := models.User{
@@ -60,9 +66,9 @@ func(u *User)Create(w http.ResponseWriter, req *http.Request){
            return
      }
    
-     err := u.signIn(w, &user)
+     err  = u.signIn(w, &user)
      if err != nil{
-          http.Error(w, err.Error(), http.StatusInternalServerError)
+           http.Redirect(w, req, "/login", http.StatusFound)
            return
      }
      http.Redirect(w, req, "/cookietest", http.StatusFound)
