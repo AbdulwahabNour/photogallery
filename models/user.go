@@ -1,7 +1,6 @@
 package models
 
 import (
-	"errors"
 	"regexp"
 	"strings"
 
@@ -14,45 +13,6 @@ import (
 )
  
  
-var ( 
-    // ErrNotFound is returned when a resource not found
-    ErrNotFound = errors.New("Models: resource not found")
-    // ErrInvalid is returned when an invalid id  is provided
-    ErrInvalidID = errors.New("Models: ID  provided was invalid")
-    // ErrInvalidPassword is returned  if hash don't matched 
-    ErrInvalidPassword = errors.New("Models: Incorrect password")
-    ErrEmailRequired = errors.New("Email address is required")
-    ErrEmailInvalid = errors.New("Email address is not valid ")
-    
-    // ErrEmailTaken is returned when an update or create is attempted
-    // with an email address that is already in use.
-    ErrEmailTaken = errors.New("Email address is already taken")
-
-    // ErrPasswordTooShort is returned  when an update or create is attempted
-    // with a user password that is less than 8 characters
-    ErrPasswordTooShort = errors.New("Password is too short must contain at least 8 characters")
-
-    // ErrPasswordTooLong is returned when an update or create is attempted
-    // with a user password that is more than 100 characters
-    ErrPasswordTooLong = errors.New("Password is too long must contain at least 100 characters")
-    // ErrPasswordRequired is returned when password is empty
-    ErrPasswordRequired = errors.New("Password is  required")
-    ErrRememberTooShort = errors.New("Remember token is too short")
-    // ErrRememberHashRequired is returned when Rememberhash is empty
-    ErrRememberHashRequired = errors.New("Rememberhash is required")
-     // ErrNameRequired is returned when user name is empty
-    ErrNameRequired = errors.New("Name is required ")
-
-    // ErrNameTooShort is returned  when an update or create is attempted
-    // with a user name that is less than 8 characters
-    ErrNameTooShort = errors.New("Name is too short must contain at least 8 characters")
-
-     // ErrNameTooLong is returned when an update or create is attempted
-    // with a user name that is more than 100 characters
-    ErrNameTooLong = errors.New("Name is too long must contain at least 100 characters")
-    
-    
-)
 
 const (
     userPassPepper = "photogallery-App"

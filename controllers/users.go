@@ -43,12 +43,9 @@ func(u *User)Create(w http.ResponseWriter, req *http.Request){
      err := parseForm(req, &dataForm)
 
      if err!= nil {
-           vd = views.Data{
-                Alert: &views.Alert{Level: views.AlertLvlError,
-                                    Message: views.AlertMsgGeneric,},
-           }
+          vd.SetAlert(err)
           u.NewView.Render(w, vd)
-           return
+          return
      }
      
      user := models.User{
@@ -57,11 +54,7 @@ func(u *User)Create(w http.ResponseWriter, req *http.Request){
           Password: dataForm.Password,
      }
      if err := u.userServ.Create(&user); err != nil{
-          
-            vd = views.Data{
-               Alert: &views.Alert{Level:views.AlertLvlError,
-                                  Message: err.Error(),   },                  
-            }
+            vd.SetAlert(err)
             u.NewView.Render(w, vd)
            return
      }
