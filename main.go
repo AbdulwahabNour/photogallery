@@ -1,15 +1,31 @@
 package main
 
 import (
-	"fmt"
+	"html/template"
+	"log"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
-func main(){
-  http.HandleFunc("/",  handlerFunc)
-  http.ListenAndServe(":8080", nil)
+var homeTemplate *template.Template
+
+func main() {
+	homeTemplate = template.Must(template.ParseFiles("views/home.gohtml"))
+	r := mux.NewRouter()
+	r.HandleFunc("/", home)
+	http.ListenAndServe(":8080", r)
+
 }
-func handlerFunc(w http.ResponseWriter, r *http.Request){
-    
-      fmt.Fprintf(w, "<h1>Welcome </h1> ")
+
+func home(w http.ResponseWriter, r *http.Request) {
+	data := struct {
+		Name string
+	}{
+		Name: "Ahmed",
+	}
+	err := homeTemplate.Execute(w, data)
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
