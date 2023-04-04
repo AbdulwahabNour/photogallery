@@ -36,7 +36,7 @@ const (
 
      // ErrNameTooLong is returned when an update or create is attempted
     // with a user name that is more than 100 characters
-    ErrNameTooLong modelError = "Models: Name is too long must contain at least 100 characters"
+    ErrNameTooLong modelError = "Models: Name is too long must contain less than 100 characters"
     
     
 )

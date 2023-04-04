@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/schema"
 )
 
-
+ 
 func parseForm(req * http.Request, dst interface{})error   {
  
         if err := req.ParseForm(); err != nil{

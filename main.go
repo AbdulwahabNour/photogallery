@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/AbdulwahabNour/lenslocked.com/controllers"
+	"github.com/AbdulwahabNour/lenslocked.com/models"
 	"github.com/gorilla/mux"
-	"lenslocked.com/controllers"
-	"lenslocked.com/models"
 )
  
 const (

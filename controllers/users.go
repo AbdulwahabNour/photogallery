@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"lenslocked.com/models"
-	"lenslocked.com/rand"
-	"lenslocked.com/views"
+	"github.com/AbdulwahabNour/lenslocked.com/models"
+	"github.com/AbdulwahabNour/lenslocked.com/rand"
+	"github.com/AbdulwahabNour/lenslocked.com/views"
 )
 
 //function to parse signup page new page

@@ -4,12 +4,12 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/AbdulwahabNour/lenslocked.com/hash"
+	"github.com/AbdulwahabNour/lenslocked.com/rand"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"lenslocked.com/hash"
-	"lenslocked.com/rand"
 )
  
  
@@ -192,7 +192,7 @@ func (u *userValidator)checkPasswordLength(user *User) error{
        return nil
    }
    passwordLength := len(user.Password)
-   if passwordLength < 6{
+   if passwordLength < 8{
        return   ErrPasswordTooShort
    }
    if passwordLength > 100 {
